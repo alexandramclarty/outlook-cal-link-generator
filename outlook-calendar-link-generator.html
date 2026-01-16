@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outlook Calendar Link Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        input[type="datetime-local"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        input[type="time"]:focus,
+        input[type="datetime-local"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .datetime-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .datetime-split {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px 6px 0 0;
+        }
+        
+        .toolbar button {
+            width: auto;
+            padding: 8px 12px;
+            margin: 0;
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            font-weight: normal;
+        }
+        
+        .toolbar button:hover {
+            background: #e9ecef;
+        }
+        
+        .toolbar button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .editor {
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            background: white;
+            font-size: 14px;
+            line-height: 1.6;
+            outline: none;
+        }
+        
+        .editor:focus {
+            border-color: #667eea;
+        }
+        
+        .editor a {
+            color: #667eea;
+            text-decoration: underline;
+        }
+        
+        .editor:empty:before {
+            content: attr(data-placeholder);
+            color: #999;
+            white-space: pre-wrap;
+        }
+        
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        .output-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+            display: none;
+        }
+        
+        .output-section.visible {
+            display: block;
+        }
+        
+        .output-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .output-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .copy-button, .test-button {
+            flex: 1;
+        }
+        
+        .copy-button {
+            background: #28a745;
+        }
+        
+        .copy-button:hover {
+            background: #218838;
+        }
+        
+        .test-button {
+            background: #17a2b8;
+        }
+        
+        .test-button:hover {
+            background: #138496;
+        }
+        
+        .helper-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .success-message.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Outlook Calendar Link Generator</h1>
+        <p class="subtitle">Create "Add to Calendar" URLs for Microsoft Outlook</p>
+        
+        <form id="calendarForm">
+            <div class="form-group">
+                <label for="subject">Event Title <span class="sr-only">(required)</span>*</label>
+                <input type="text" id="subject" name="subject" required aria-required="true" placeholder="Opening Session">
+            </div>
+            
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" id="location" name="location" value="Virtual - Microsoft Teams">
+            </div>
+            
+            <div class="datetime-group">
+                <div class="form-group">
+                    <label for="startdate">Start Date <span class="sr-only">(required)</span>*</label>
+                    <div class="datetime-split">
+                        <input type="date" id="startdate" name="startdate" value="2026-02-19" required aria-required="true">
+                        <input type="time" id="starttime" name="starttime" value="09:00" required aria-required="true" aria-label="Start time">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="enddate">End Date <span class="sr-only">(required)</span>*</label>
+                    <div class="datetime-split">
+                        <input type="date" id="enddate" name="enddate" value="2026-02-19" required aria-required="true">
+                        <input type="time" id="endtime" name="endtime" value="10:00" required aria-required="true" aria-label="End time">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="bodyEditor">Event Description</label>
+                <div class="toolbar" role="toolbar" aria-label="Text formatting" aria-controls="bodyEditor">
+                    <button type="button" class="format-btn" data-command="bold" title="Bold" aria-label="Bold" aria-pressed="false"><strong>B</strong></button>
+                    <button type="button" class="format-btn" data-command="italic" title="Italic" aria-label="Italic" aria-pressed="false"><em>I</em></button>
+                    <button type="button" class="format-btn" data-command="createLink" title="Insert Link" aria-label="Insert link">🔗</button>
+                </div>
+                <div class="editor" id="bodyEditor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Event description" data-placeholder="Join the Microsoft Teams meeting:
+
+https://teams.microsoft.com/l/meetup-join/...
+
+---
+
+Additional event information can be found on the SharePoint site."></div>
+                <p class="helper-text">Use the toolbar to format text. URLs will be clickable in Outlook.</p>
+            </div>
+            
+            <button type="submit">Generate Calendar Link</button>
+        </form>
+        
+        <div class="output-section" id="outputSection" role="region" aria-label="Generated calendar link">
+            <span class="output-label">Your Outlook Calendar URL:</span>
+            <div class="output-box" id="outputUrl" aria-live="polite"></div>
+            
+            <div class="button-group">
+                <button type="button" class="copy-button" id="copyButton">Copy to Clipboard</button>
+                <button type="button" class="test-button" id="testButton">Test Link</button>
+            </div>
+            
+            <div class="success-message" id="successMessage" role="status" aria-live="polite" aria-atomic="true">
+                ✓ Copied to clipboard!
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('calendarForm');
+        const outputSection = document.getElementById('outputSection');
+        const outputUrl = document.getElementById('outputUrl');
+        const copyButton = document.getElementById('copyButton');
+        const testButton = document.getElementById('testButton');
+        const successMessage = document.getElementById('successMessage');
+        const bodyEditor = document.getElementById('bodyEditor');
+        
+        let generatedUrl = '';
+        
+        // WYSIWYG Editor functionality
+        const formatButtons = document.querySelectorAll('.format-btn');
+        
+        formatButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const command = this.getAttribute('data-command');
+                
+                if (command === 'createLink') {
+                    const url = prompt('Enter the URL:');
+                    if (url) {
+                        document.execCommand('createLink', false, url);
+                    }
+                } else {
+                    document.execCommand(command, false, null);
+                    // Toggle aria-pressed for bold and italic
+                    const isPressed = this.getAttribute('aria-pressed') === 'true';
+                    this.setAttribute('aria-pressed', !isPressed);
+                    
+                    // Toggle active class for visual feedback
+                    this.classList.toggle('active');
+                }
+                
+                bodyEditor.focus();
+            });
+        });
+        
+        // Update aria-pressed state based on selection
+        bodyEditor.addEventListener('mouseup', updateToolbarState);
+        bodyEditor.addEventListener('keyup', updateToolbarState);
+        
+        function updateToolbarState() {
+            formatButtons.forEach(button => {
+                const command = button.getAttribute('data-command');
+                if (command === 'bold' || command === 'italic') {
+                    const isActive = document.queryCommandState(command);
+                    button.setAttribute('aria-pressed', isActive);
+                    button.classList.toggle('active', isActive);
+                }
+            });
+        }
+        
+        // Placeholder handling for contenteditable
+        bodyEditor.addEventListener('focus', function() {
+            if (this.textContent.trim() === '' && this.innerHTML === '') {
+                this.innerHTML = '';
+            }
+        });
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const subject = document.getElementById('subject').value;
+            const location = document.getElementById('location').value;
+            const startdate = document.getElementById('startdate').value;
+            const starttime = document.getElementById('starttime').value;
+            const enddate = document.getElementById('enddate').value;
+            const endtime = document.getElementById('endtime').value;
+            
+            // Get HTML content from editor and preserve formatting for Outlook
+            let bodyHtml = bodyEditor.innerHTML;
+            
+            // Clean up and normalize the HTML for Outlook
+            // Replace div/p tags with br tags for better compatibility
+            bodyHtml = bodyHtml
+                .replace(/<div>/gi, '<br>')
+                .replace(/<\/div>/gi, '')
+                .replace(/<p>/gi, '')
+                .replace(/<\/p>/gi, '<br>')
+                .replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '<br><br>') // Normalize double breaks
+                .replace(/&nbsp;/g, ' ')
+                .trim();
+            
+            // URLSearchParams will handle the encoding automatically
+            const bodyText = bodyHtml;
+            
+            // Combine date and time, add seconds and timezone (Central Time)
+            const startFormatted = `${startdate}T${starttime}:00-06:00`;
+            const endFormatted = `${enddate}T${endtime}:00-06:00`;
+            
+            // Build the URL
+            const baseUrl = 'https://outlook.office.com/owa/?path=/calendar/action/compose';
+            const params = new URLSearchParams();
+            
+            params.append('subject', subject);
+            if (location) params.append('location', location);
+            params.append('startdt', startFormatted);
+            params.append('enddt', endFormatted);
+            if (bodyText) params.append('body', bodyText);
+            
+            generatedUrl = baseUrl + '&' + params.toString();
+            
+            // Display the URL
+            outputUrl.textContent = generatedUrl;
+            outputSection.classList.add('visible');
+            
+            // Announce to screen readers that URL was generated
+            const announcement = document.createElement('div');
+            announcement.setAttribute('role', 'status');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.className = 'sr-only';
+            announcement.textContent = 'Calendar link generated successfully';
+            document.body.appendChild(announcement);
+            setTimeout(() => announcement.remove(), 1000);
+            
+            // Scroll to output
+            outputSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            // Focus on copy button for keyboard users
+            setTimeout(() => copyButton.focus(), 300);
+        });
+        
+        copyButton.addEventListener('click', function() {
+            navigator.clipboard.writeText(generatedUrl).then(function() {
+                successMessage.classList.add('visible');
+                setTimeout(function() {
+                    successMessage.classList.remove('visible');
+                }, 3000);
+            });
+        });
+        
+        testButton.addEventListener('click', function() {
+            window.open(generatedUrl, '_blank');
+        });
+    </script>
+</body>
+</html>
